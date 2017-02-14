@@ -37,6 +37,7 @@ def session_capabilities(request, variables):
 
 @pytest.fixture
 def driver_kwargs(request, capabilities):
+    # Assertions of capabilitys should go here
     #appium_user = f'{0.appium_username}:{0.appium_access_key}@'
     kwargs = dict(
         command_executor='http://{0.appium_host}:{0.appium_port}/wd/hub'.format(request.config.option),
@@ -58,14 +59,14 @@ def driver(request, driver_class, driver_kwargs):
     """Returns a AppiumDriver instance based on options and capabilities"""
     driver = driver_class(**driver_kwargs)
 
-    event_listener = request.config.getoption('event_listener')
-    if event_listener is not None:
-        # Import the specified event listener and wrap the driver instance
-        mod_name, class_name = event_listener.rsplit('.', 1)
-        mod = __import__(mod_name, fromlist=[class_name])
-        event_listener = getattr(mod, class_name)
-        if not isinstance(driver, EventFiringWebDriver):
-            driver = EventFiringWebDriver(driver, event_listener())
+    #event_listener = request.config.getoption('event_listener')
+    #if event_listener is not None:
+    #    # Import the specified event listener and wrap the driver instance
+    #    mod_name, class_name = event_listener.rsplit('.', 1)
+    #    mod = __import__(mod_name, fromlist=[class_name])
+    #    event_listener = getattr(mod, class_name)
+    #    if not isinstance(driver, EventFiringWebDriver):
+    #        driver = EventFiringWebDriver(driver, event_listener())
 
     request.node._driver = driver
     yield driver
@@ -127,8 +128,8 @@ def _gather_screenshot(item, report, driver, summary, extra):
 def _gather_html(item, report, driver, summary, extra):
     try:
         html = driver.page_source
-        if not PY3:
-            html = html.encode('utf-8')
+        #if not PY3:
+        #    html = html.encode('utf-8')
     except Exception as e:
         summary.append('WARNING: Failed to gather HTML: {0}'.format(e))
         return
@@ -164,8 +165,8 @@ def format_log(log):
         datetime.utcfromtimestamp(entry['timestamp'] / 1000.0).strftime(
             timestamp_format), entry).rstrip() for entry in log]
     log = '\n'.join(entries)
-    if not PY3:
-        log = log.encode('utf-8')
+    #if not PY3:
+    #    log = log.encode('utf-8')
     return log
 
 
