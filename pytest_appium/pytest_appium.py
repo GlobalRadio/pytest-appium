@@ -5,8 +5,53 @@ import sys
 
 import pytest
 
+from appium import webdriver
+
 
 # Fixtures ---------------------------------------------------------------------
+
+
+@pytest.fixture(scope='session', autouse=True)
+def _environment(request, session_capabilities):
+    """Provide additional environment details to pytest-html report"""
+    config = request.config
+    # add environment details to the pytest-html plugin
+    #config._environment.append(('Driver', config.option.driver))
+    # add capabilities to environment
+    config._environment.extend([('Capability', '{0}: {1}'.format(
+        k, v)) for k, v in session_capabilities.items()])
+    #if config.option.driver == 'Remote':
+    config._environment.append(
+        ('Server', 'http://{0.appium_host}:{0.appium_port}'.format(config.option))
+    )
+
+
+@pytest.fixture(scope='session')
+def session_capabilities(request, variables):
+    """Returns combined capabilities from pytest-variables and command line"""
+    capabilities = variables.get('capabilities', {})
+    for capability in request.config.getoption('capabilities'):
+        capabilities[capability[0]] = capability[1]
+    return capabilities
+
+
+@pytest.fixture
+def driver_kwargs(request, capabilities):
+    #appium_user = f'{0.appium_username}:{0.appium_access_key}@'
+    kwargs = dict(
+        command_executor='http://{0.appium_host}:{0.appium_port}/wd/hub'.format(request.config.option),
+        desired_capabilities=capabilities,
+        browser_profile=None,
+        proxy=None,
+        keep_alive=False,
+    )
+    return kwargs
+
+
+@pytest.fixture
+def driver_class(request):
+    return webdriver.Remote
+
 
 @pytest.yield_fixture
 def driver(request, driver_class, driver_kwargs):
@@ -27,65 +72,31 @@ def driver(request, driver_class, driver_kwargs):
     driver.quit()
 
 
+@pytest.yield_fixture(scope='session')
+def driver_session_(request, session_capabilities):
+    """do not use this fixture directly as screenshots will not function"""
+    _driver_class = driver_class(request)
+    yield from driver(
+        request,
+        _driver_class,
+        driver_kwargs(
+            request,
+            session_capabilities,
+        )
+    )
 @pytest.yield_fixture
-def appium(driver):
-    yield appium
+def driver_session(request, driver_session_):
+    request.node._driver = driver_session_  # Required to facilitate screenshots in html reports
+    yield driver_session_
+
+
+@pytest.yield_fixture
+def appium(driver_session):
+    """Alias for driver"""
+    yield driver_session
 
 
 # pytest -----------------------------------------------------------------------
-
-def pytest_addhooks(pluginmanager):
-    from . import hooks
-    method = getattr(pluginmanager, 'add_hookspecs', None)
-    if method is None:
-        method = pluginmanager.addhooks
-    method(hooks)
-
-
-def pytest_configure(config):
-    if hasattr(config, 'slaveinput'):
-        return  # xdist slave
-    config.addinivalue_line(
-        'markers', 'capabilities(kwargs): add or change existing '
-        'capabilities. specify capabilities as keyword arguments, for example '
-        'capabilities(foo=''bar'')')
-
-
-def pytest_report_header(config, startdir):
-    driver = config.getoption('driver')
-    if driver is not None:
-        return 'driver: {0}'.format(driver)
-
-
-@pytest.mark.hookwrapper
-def pytest_runtest_makereport(item, call):
-    outcome = yield
-    report = outcome.get_result()
-    summary = []
-    extra = getattr(report, 'extra', [])
-    driver = getattr(item, '_driver', None)
-    xfail = hasattr(report, 'wasxfail')
-    failure = (report.skipped and xfail) or (report.failed and not xfail)
-    when = item.config.getini('appium_capture_debug').lower()
-    capture_debug = when == 'always' or (when == 'failure' and failure)
-    if driver is not None:
-        if capture_debug:
-            exclude = item.config.getini('appium_exclude_debug').lower()
-            if 'url' not in exclude:
-                _gather_url(item, report, driver, summary, extra)
-            if 'screenshot' not in exclude:
-                _gather_screenshot(item, report, driver, summary, extra)
-            if 'html' not in exclude:
-                _gather_html(item, report, driver, summary, extra)
-            if 'logs' not in exclude:
-                _gather_logs(item, report, driver, summary, extra)
-            item.config.hook.pytest_appium_capture_debug(
-                item=item, report=report, extra=extra)
-        item.config.hook.pytest_appium_runtest_makereport(
-            item=item, report=report, summary=summary, extra=extra)
-    if summary:
-        report.sections.append(('pytest-appium', '\n'.join(summary)))
-    report.extra = extra
 
 
 def _gather_url(item, report, driver, summary, extra):
@@ -169,31 +180,86 @@ def split_class_and_test_names(nodeid):
     return (classname, name)
 
 
-def pytest_addoption(parser):
-    _capture_choices = ('never', 'failure', 'always')
-    parser.addini('appium_capture_debug',
-                  help='when debug is captured {0}'.format(_capture_choices),
-                  default=os.getenv('APPIUM_CAPTURE_DEBUG', 'failure'))
-    parser.addini('appium_exclude_debug',
-                  help='debug to exclude from capture',
-                  default=os.getenv('APPIUM_EXCLUDE_DEBUG'))
 
-    group = parser.getgroup('appium', 'appium')
-    #group._addoption('--driver',
-    #                 choices=SUPPORTED_DRIVERS,
-    #                 help='webdriver implementation.',
-    #                 metavar='str')
-    #group._addoption('--driver-path',
-    #                 metavar='path',
-    #                 help='path to the driver executable.')
-    group._addoption('--capability',
-                     action='append',
-                     default=[],
-                     dest='capabilities',
-                     metavar=('key', 'value'),
-                     nargs=2,
-                     help='additional capabilities.')
-    group._addoption('--event-listener',
-                     metavar='str',
-                     help='appium eventlistener class, e.g. '
-                          'package.module.EventListenerClassName.')
+class AppiumPlugin(object):
+
+    def pytest_addhooks(self, pluginmanager):
+        from . import hooks
+        method = getattr(pluginmanager, 'add_hookspecs', None)
+        if method is None:
+            method = pluginmanager.addhooks
+        method(hooks)
+
+    def pytest_report_header(self, config, startdir):
+        """return a string to be displayed as header info for terminal reporting."""
+        #driver = config.getoption('driver')
+        #if driver is not None:
+        #    return 'driver: {0}'.format(driver)
+        pass
+
+    @pytest.mark.hookwrapper
+    def pytest_runtest_makereport(self, item, call):
+        outcome = yield
+        report = outcome.get_result()
+        summary = []
+        extra = getattr(report, 'extra', [])
+        driver = getattr(item, '_driver', None)
+        xfail = hasattr(report, 'wasxfail')
+        failure = (report.skipped and xfail) or (report.failed and not xfail)
+        when = item.config.getini('appium_capture_debug').lower()
+        capture_debug = when == 'always' or (when == 'failure' and failure)
+        if driver is not None:
+            if capture_debug:
+                exclude = item.config.getini('appium_exclude_debug').lower()
+                if 'url' not in exclude:
+                    _gather_url(item, report, driver, summary, extra)
+                if 'screenshot' not in exclude:
+                    _gather_screenshot(item, report, driver, summary, extra)
+                if 'html' not in exclude:
+                    _gather_html(item, report, driver, summary, extra)
+                if 'logs' not in exclude:
+                    _gather_logs(item, report, driver, summary, extra)
+                item.config.hook.pytest_appium_capture_debug(
+                    item=item, report=report, extra=extra)
+            item.config.hook.pytest_appium_runtest_makereport(
+                item=item, report=report, summary=summary, extra=extra)
+        if summary:
+            report.sections.append(('pytest-appium', '\n'.join(summary)))
+        report.extra = extra
+
+    def pytest_addoption(self, parser):
+        _capture_choices = ('never', 'failure', 'always')
+        parser.addini('appium_capture_debug',
+                    help='when debug is captured {0}'.format(_capture_choices),
+                    default=os.getenv('APPIUM_CAPTURE_DEBUG', 'failure'))
+        parser.addini('appium_exclude_debug',
+                    help='debug to exclude from capture',
+                    default=os.getenv('APPIUM_EXCLUDE_DEBUG'))
+
+        group = parser.getgroup('appium', 'appium')
+        group._addoption('--appium_username', help='', metavar='str', default='')
+        group._addoption('--appium_access_key', help='', metavar='str', default='')
+        group._addoption('--appium_host', help='', metavar='str', default='localhost')
+        group._addoption('--appium_port', help='', metavar='str', default='4723')
+
+        #group._addoption('--driver',
+        #                 choices=SUPPORTED_DRIVERS,
+        #                 help='webdriver implementation.',
+        #                 metavar='str')
+        #group._addoption('--driver-path',
+        #                 metavar='path',
+        #                 help='path to the driver executable.')
+        group._addoption(
+            '--capability',
+            action='append',
+            default=[],
+            dest='capabilities',
+            metavar=('key', 'value'),
+            nargs=2,
+            help='additional capabilities.'  # http://pytest-selenium.readthedocs.io/en/latest/user_guide.html#capabilities-files
+        )
+        group._addoption(
+            '--event-listener',
+            metavar='str',
+            help='appium eventlistener class, e.g. package.module.EventListenerClassName.'
+        )
