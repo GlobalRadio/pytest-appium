@@ -8,9 +8,6 @@ import pytest
 from appium import webdriver
 
 
-# Fixtures ---------------------------------------------------------------------
-
-
 @pytest.fixture(scope='session', autouse=True)
 def _environment(request, session_capabilities):
     """Provide additional environment details to pytest-html report"""
@@ -28,7 +25,7 @@ def _environment(request, session_capabilities):
 
 @pytest.fixture(scope='session')
 def session_capabilities(request, variables):
-    """Returns combined capabilities from pytest-variables and command line"""
+    """Returns combined capabilities from pytest-variables and command line (--capabilities)"""
     capabilities = variables.get('capabilities', {})
     for capability in request.config.getoption('capabilities'):
         capabilities[capability[0]] = capability[1]
@@ -37,6 +34,7 @@ def session_capabilities(request, variables):
 
 @pytest.fixture
 def driver_kwargs(request, capabilities):
+    """ """
     # Assertions of capabilitys should go here
     #appium_user = f'{0.appium_username}:{0.appium_access_key}@'
     kwargs = dict(
@@ -51,6 +49,7 @@ def driver_kwargs(request, capabilities):
 
 @pytest.fixture
 def driver_class(request):
+    """Appium driver class"""
     return webdriver.Remote
 
 
@@ -87,12 +86,12 @@ def driver_session_(request, session_capabilities):
     )
 @pytest.yield_fixture
 def driver_session(request, driver_session_):
+    """Appium driver (session)"""
     request.node._driver = driver_session_  # Required to facilitate screenshots in html reports
     yield driver_session_
 
 
 @pytest.yield_fixture
 def appium(driver_session):
-    """Alias for driver"""
+    """Appium driver instance for device specified in capabilities"""
     yield driver_session
-

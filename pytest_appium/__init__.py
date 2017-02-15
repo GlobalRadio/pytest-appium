@@ -1,5 +1,6 @@
 import os
 
+from .conftest import *
 
 def pytest_configure(config):
     if hasattr(config, 'slaveinput'):

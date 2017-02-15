@@ -16,8 +16,9 @@ def _gather_app_strings(item, report, driver, summary, extra):
         extra.append(pytest_html.extras.text(json.dumps(app_strings), 'app_strings'))
 
     app_string_keys = item.config.getoption('appium_debug_app_string_key')
-    app_strings = {k: v for k, v in app_strings.items() if k in app_string_keys}
-    summary.append('APP_STRINGS: {0}'.format(app_strings))
+    if app_string_keys:
+        app_strings = {k: v for k, v in app_strings.items() if k in app_string_keys}
+        summary.append('APP_STRINGS: {0}'.format(app_strings))
 
 
 def _gather_screenshot(item, report, driver, summary, extra):
