@@ -1,21 +1,22 @@
 import pytest
+import json
+from datetime import datetime
+
 
 def _gather_app_strings(item, report, driver, summary, extra):
     """Add app_strings to the html report (if set in commandline)"""
-    app_string_keys = item.config.getoption('appium_debug_app_string_key')
-    if not app_string_keys:
-        return
     try:
         app_strings = driver.app_strings()
     except Exception as e:
         summary.append('WARNING: Failed to gather app_strings: {0}'.format(e))
         return
 
-    app_strings = {k: v for k, v in app_strings.items() if k in app_string_keys}
-
     pytest_html = item.config.pluginmanager.getplugin('html')
     if pytest_html is not None:
-        extra.append(pytest_html.extras.app_strings(app_strings))
+        extra.append(pytest_html.extras.text(json.dumps(app_strings), 'app_strings'))
+
+    app_string_keys = item.config.getoption('appium_debug_app_string_key')
+    app_strings = {k: v for k, v in app_strings.items() if k in app_string_keys}
     summary.append('APP_STRINGS: {0}'.format(app_strings))
 
 
