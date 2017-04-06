@@ -87,6 +87,7 @@ def driver_session_(request, session_capabilities):
     except urllib.error.URLError:
         raise Exception(f"""Unable to connect to Appium server {_driver_kwargs['command_executor']}""")
 
+
 @pytest.yield_fixture
 def driver_session(request, driver_session_):
     """
