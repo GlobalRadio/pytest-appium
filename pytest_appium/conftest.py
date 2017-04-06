@@ -2,6 +2,7 @@ import copy
 from datetime import datetime
 import os
 import sys
+import urllib.error
 
 import pytest
 
@@ -74,24 +75,29 @@ def driver(request, driver_class, driver_kwargs):
 
 @pytest.yield_fixture(scope='session')
 def driver_session_(request, session_capabilities):
-    """do not use this fixture directly as screenshots will not function"""
+    """
+    Appium Session
+    Created from --capabilities
+    (do not use this fixture directly as report screenshots will not function)
+    """
     _driver_class = driver_class(request)
-    yield from driver(
-        request,
-        _driver_class,
-        driver_kwargs(
-            request,
-            session_capabilities,
-        )
-    )
+    _driver_kwargs = driver_kwargs(request, session_capabilities)
+    try:
+        yield from driver(request, _driver_class, _driver_kwargs)
+    except urllib.error.URLError:
+        raise Exception(f"""Unable to connect to Appium server {_driver_kwargs['command_executor']}""")
+
 @pytest.yield_fixture
 def driver_session(request, driver_session_):
-    """Appium driver (session)"""
+    """
+    Appium Session
+    """
     request.node._driver = driver_session_  # Required to facilitate screenshots in html reports
     yield driver_session_
+    #driver_session_.reset()
 
 
 @pytest.yield_fixture
 def appium(driver_session):
-    """Appium driver instance for device specified in capabilities"""
+    """Alias for driver_session"""
     yield driver_session
