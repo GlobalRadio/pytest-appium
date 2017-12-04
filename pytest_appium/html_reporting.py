@@ -41,7 +41,14 @@ def _gather_page_source(item, report, driver, summary, extra):
         return
     pytest_html = item.config.pluginmanager.getplugin('html')
     if pytest_html is not None:
-        extra.append(pytest_html.extras.text(page_source, 'UI'))  # add page source to the html report
+        # Add page source to the html report
+        #   There is no `.xml(` output, so we create our own `.extra`
+        extra.append(
+            pytest_html.extras.extra(
+                page_source, pytest_html.extras.FORMAT_TEXT,
+                name='UI', mime_type='application/xml', extension='xml',
+            )
+        )
 
 
 def _gather_logs(item, report, driver, summary, extra):
