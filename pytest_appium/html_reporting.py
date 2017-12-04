@@ -41,7 +41,7 @@ def _gather_page_source(item, report, driver, summary, extra):
         return
     pytest_html = item.config.pluginmanager.getplugin('html')
     if pytest_html is not None:
-        extra.append(pytest_html.extras.html(page_source))  # add page source to the html report
+        extra.append(pytest_html.extras.text(page_source, 'UI'))  # add page source to the html report
 
 
 def _gather_logs(item, report, driver, summary, extra):
