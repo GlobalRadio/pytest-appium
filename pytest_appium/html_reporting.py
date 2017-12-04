@@ -13,7 +13,7 @@ def _gather_app_strings(item, report, driver, summary, extra):
 
     pytest_html = item.config.pluginmanager.getplugin('html')
     if pytest_html is not None:
-        extra.append(pytest_html.extras.text(json.dumps(app_strings), 'app_strings'))
+        extra.append(pytest_html.extras.json(app_strings, 'app_strings'))
 
     app_string_keys = item.config.getoption('appium_debug_app_string_key')
     if app_string_keys:
@@ -41,7 +41,7 @@ def _gather_page_source(item, report, driver, summary, extra):
         return
     pytest_html = item.config.pluginmanager.getplugin('html')
     if pytest_html is not None:
-        extra.append(pytest_html.extras.text(page_source, 'UI'))  # add page source to the html report
+        extra.append(pytest_html.extras.html(page_source, 'UI'))  # add page source to the html report
 
 
 def _gather_logs(item, report, driver, summary, extra):
@@ -60,8 +60,11 @@ def _gather_logs(item, report, driver, summary, extra):
             return
         pytest_html = item.config.pluginmanager.getplugin('html')
         if pytest_html is not None:
-            extra.append(pytest_html.extras.text(
-                format_log(log), '%s Log' % name.title()))
+            extra.append(
+                pytest_html.extras.text(
+                    format_log(log), '%s Log' % name.title()
+                )
+            )
 
 
 def format_log(log):
