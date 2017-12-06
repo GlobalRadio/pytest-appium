@@ -62,4 +62,4 @@ def pytest_report_header(config, startdir):
     """return a string to be displayed as header info for terminal reporting."""
     capabilities = config.getoption('capabilities')
     if capabilities:
-        return 'capabilities: {0}'.format(capabilitys)
+        return 'capabilities: {0}'.format(capabilities)
