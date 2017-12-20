@@ -3,10 +3,16 @@ from datetime import datetime
 import os
 import sys
 import urllib.error
+import time
 
 import pytest
 
+from ._utils import get_json
+
 from appium import webdriver
+
+import logging
+log = logging.getLogger(__name__)
 
 
 @pytest.fixture(scope='session', autouse=True)
@@ -82,10 +88,28 @@ def driver_session_(request, session_capabilities):
     """
     _driver_class = driver_class(request)
     _driver_kwargs = driver_kwargs(request, session_capabilities)
+
+    appium_url = _driver_kwargs['command_executor']
+
+    def wait_for_appium():
+        seconds_to_wait = request.config.option.appium_wait_for_server_seconds
+        if not seconds_to_wait:
+            return
+        for i in range(seconds_to_wait):
+            try:
+                if get_json(f"""{appium_url}/status""").get('value').get('build').get('version'):
+                    return
+            except Exception:
+                pass
+            log.debug(f'waiting for {appium_url} {i} of {seconds_to_wait}')
+            time.sleep(1)
+        raise Exception(f"""Waited for {seconds_to_wait} seconds for Appium server {appium_url}. Server not available""")
+    wait_for_appium()
+
     try:
         yield from driver(request, _driver_class, _driver_kwargs)
     except urllib.error.URLError:
-        raise Exception(f"""Unable to connect to Appium server {_driver_kwargs['command_executor']}""")
+        raise Exception(f"""Unable to connect to Appium server {appium_url}""")
 
 
 @pytest.yield_fixture
