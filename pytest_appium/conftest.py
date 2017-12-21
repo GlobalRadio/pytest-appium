@@ -4,10 +4,11 @@ import os
 import sys
 import urllib.error
 import time
+import datetime
 
 import pytest
 
-from ._utils import get_json
+from ._utils import get_json, post_json
 
 from appium import webdriver
 
@@ -79,6 +80,39 @@ def driver(request, driver_class, driver_kwargs):
     driver.quit()
 
 
+def appium_is_android_device_available(appium_wd_api_endpoint):
+    """
+    Problem:
+        We cant ask appium how many devices are attacked from it's 'wd' api.
+    Solution:
+        Attempt to launch a package that deliberatly does not exist.
+        If a device is found it will try to launch this non existent app.
+        We can detect that error state tried to load that app.
+        If it 'did' try to load it, we know we attached to a device.
+    Example Outputs:
+        curl -H "Content-Type: application/json" -X POST -d '{"desiredCapabilities":{"platformName": "Android", "deviceName":"Android Emulator", "appPackage":"NOT_REAL"}}' http://devandroid02.lq.int.thisisglobal.com:4723/wd/hub/session
+        {'status': 13, 'value': {'message': 'An unknown server-side error occurred while processing the command. Original error: Could not find a connected Android device.'}, 'sessionId': None}
+        {'status': 13, 'value': {'message': "An unknown server-side error occurred while processing the command. Original error: Cannot stop and clear NOT_REAL. Original error: Error executing adbExec. Original error: 'Command '/usr/local/Caskroom/android-sdk/3859397/platform-tools/adb -P 5037 -s emulator-5554 shell pm clear NOT_REAL' exited with code 1'; Stderr: 'Failed'; Code: '1'"}, 'sessionId': None}
+    """
+    FAKE_APP_NAME = "NOT_REAL"
+    response = post_json(
+        url=f'''{appium_wd_api_endpoint}/session''',
+        data={
+            "desiredCapabilities": {
+                "platformName": "Android",
+                "deviceName": "Android Emulator",
+                "appPackage": FAKE_APP_NAME,
+            },
+        },
+    )
+    return FAKE_APP_NAME in response.get('value', {}).get('message', '')
+
+
+APPIUM_WAIT_FOR = {
+    'appium': lambda appium_url: get_json(f"""{appium_url}/status""").get('value').get('build').get('version'),
+    'android_device_available': lambda appium_url: appium_is_android_device_available(appium_url),
+    #'ios_device_available': ,
+}
 @pytest.yield_fixture(scope='session')
 def driver_session_(request, session_capabilities):
     """
@@ -91,19 +125,23 @@ def driver_session_(request, session_capabilities):
 
     appium_url = _driver_kwargs['command_executor']
 
+    # Wait for Appium
     def wait_for_appium():
-        seconds_to_wait = request.config.option.appium_wait_for_server_seconds
-        if not seconds_to_wait:
+        wait_for_condition = request.config.option.appium_wait_for_contition
+        seconds_to_wait = request.config.option.appium_wait_for_seconds
+        if not seconds_to_wait or not wait_for_condition:
             return
-        for i in range(seconds_to_wait):
+        assert wait_for_condition in APPIUM_WAIT_FOR
+        expire_datetime = datetime.datetime.now() + datetime.timedelta(seconds=seconds_to_wait)
+        while datetime.datetime.now() <= expire_datetime:
             try:
-                if get_json(f"""{appium_url}/status""").get('value').get('build').get('version'):
+                if APPIUM_WAIT_FOR[wait_for_condition](appium_url):
                     return
             except Exception:
                 pass
-            log.debug(f'waiting for {appium_url} {i} of {seconds_to_wait}')
+            log.debug(f'Waiting on {wait_for_condition} for {seconds_to_wait} for Appium server{appium_url}')
             time.sleep(1)
-        raise Exception(f"""Waited for {seconds_to_wait} seconds for Appium server {appium_url}. Server not available""")
+        raise Exception(f'Server not ready. Failed to wait on {wait_for_condition} for {seconds_to_wait} seconds for Appium server {appium_url}')
     wait_for_appium()
 
     try:

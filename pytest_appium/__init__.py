@@ -41,7 +41,8 @@ def pytest_addoption(parser):
     group = parser.getgroup('appium', 'appium')
     group.addoption('--appium_host', metavar='str', default='localhost', help='')
     group.addoption('--appium_port', metavar='str', default='4723', help='')
-    group.addoption('--appium_wait_for_server_seconds', type=int, default=0, help='Seconds to wait for an Appium server to become available before raising an error.')
+    group.addoption('--appium_wait_for_contition', choices=APPIUM_WAIT_FOR.keys(), help='Type of appium condition to wait for before begining first test')
+    group.addoption('--appium_wait_for_seconds', type=int, default=0, help='Seconds to wait for an Appium server to become available before raising an error.')
     group.addoption('--appium_debug_app_string_key', metavar='str', action='append', default=[], help='Strings to extract on failure for html report')
     group.addoption(
         '--capability',
