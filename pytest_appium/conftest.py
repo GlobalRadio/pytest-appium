@@ -80,12 +80,12 @@ def driver(request, driver_class, driver_kwargs):
     driver.quit()
 
 
-def appium_is_android_device_available(appium_wd_api_endpoint):
+def _appium_is_device_available(appium_wd_api_endpoint, desiredCapabilities={}, appNameKey=''):
     """
     Problem:
         We cant ask appium how many devices are attacked from it's 'wd' api.
     Solution:
-        Attempt to launch a package that deliberatly does not exist.
+        Attempt to launch a package that deliberately does not exist.
         If a device is found it will try to launch this non existent app.
         We can detect that error state tried to load that app.
         If it 'did' try to load it, we know we attached to a device.
@@ -94,25 +94,38 @@ def appium_is_android_device_available(appium_wd_api_endpoint):
         {'status': 13, 'value': {'message': 'An unknown server-side error occurred while processing the command. Original error: Could not find a connected Android device.'}, 'sessionId': None}
         {'status': 13, 'value': {'message': "An unknown server-side error occurred while processing the command. Original error: Cannot stop and clear NOT_REAL. Original error: Error executing adbExec. Original error: 'Command '/usr/local/Caskroom/android-sdk/3859397/platform-tools/adb -P 5037 -s emulator-5554 shell pm clear NOT_REAL' exited with code 1'; Stderr: 'Failed'; Code: '1'"}, 'sessionId': None}
     """
-    FAKE_APP_NAME = "NOT_REAL"
     response = post_json(
         url=f'''{appium_wd_api_endpoint}/session''',
-        data={
-            "desiredCapabilities": {
-                "platformName": "Android",
-                "deviceName": "Android Emulator",
-                "appPackage": FAKE_APP_NAME,
-            },
-        },
+        data={"desiredCapabilities": desiredCapabilities},
     )
-    return FAKE_APP_NAME in response.get('value', {}).get('message', '')
+    return desiredCapabilities[appNameKey] in response.get('value', {}).get('message', '')
 
+appium_is_device_available_android = partial(
+    _appium_is_device_available,
+    desiredCapabilities={
+        "platformName": "Android",
+        "deviceName": "Android Emulator",
+        "appPackage": "NOT_REAL",
+    },
+    appNameKey='appPackage',
+)
+
+appium_is_device_available_ios = partial(
+    _appium_is_device_available,
+    desiredCapabilities={
+        "platformName": "iOS",
+        "deviceName": "iPhone Simulator",
+        "bundleId": "NOT_REAL",
+    },
+    appNameKey='bundleId',
+)
 
 APPIUM_WAIT_FOR = {
     'appium': lambda appium_url: get_json(f"""{appium_url}/status""").get('value').get('build').get('version'),
-    'android_device_available': lambda appium_url: appium_is_android_device_available(appium_url),
-    #'ios_device_available': ,
+    'android_device_available': lambda appium_url: appium_is_device_available_android(appium_url),
+    'ios_device_available': lambda appium_url: appium_is_device_available_ios(appium_url),
 }
+
 @pytest.yield_fixture(scope='session')
 def driver_session_(request, session_capabilities):
     """
