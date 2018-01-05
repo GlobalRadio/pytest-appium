@@ -5,6 +5,7 @@ import sys
 import urllib.error
 import time
 import datetime
+from functools import partial
 
 import pytest
 
@@ -115,6 +116,7 @@ appium_is_device_available_ios = partial(
     desiredCapabilities={
         "platformName": "iOS",
         "deviceName": "iPhone Simulator",
+        "automationName": "XCUITest",
         "bundleId": "NOT_REAL",
     },
     appNameKey='bundleId',
@@ -122,8 +124,8 @@ appium_is_device_available_ios = partial(
 
 APPIUM_WAIT_FOR = {
     'appium': lambda appium_url: get_json(f"""{appium_url}/status""").get('value').get('build').get('version'),
-    'android_device_available': lambda appium_url: appium_is_device_available_android(appium_url),
-    'ios_device_available': lambda appium_url: appium_is_device_available_ios(appium_url),
+    'android_device_available': appium_is_device_available_android,
+    #'ios_device_available': appium_is_device_available_ios,
 }
 
 @pytest.yield_fixture(scope='session')
