@@ -103,6 +103,9 @@ class _PythonUIAutomatorBuilderMixin():
                 return self
             return _add_segment
 
+    def build(self):
+        return (MobileBy.ANDROID_UIAUTOMATOR, self.__str__())
+
 
 class UiSelector(_PythonUIAutomatorBuilderMixin):
     """
@@ -144,9 +147,6 @@ class UiSelector(_PythonUIAutomatorBuilderMixin):
     def __str__(self):
         return f'''new UiSelector(){self._render_args()}'''
 
-    def build(self):
-        return (MobileBy.ANDROID_UIAUTOMATOR, self.__str__())
-
 
 class UiScrollable(_PythonUIAutomatorBuilderMixin):
     """
@@ -164,3 +164,21 @@ class UiScrollable(_PythonUIAutomatorBuilderMixin):
 
     def __str__(self):
         return f'''new UiScrollable({self.uiselector_container}){self._render_args()}'''
+
+
+class UiCollection(_PythonUIAutomatorBuilderMixin):
+    """
+    https://developer.android.com/reference/android/support/test/uiautomator/UiCollection.html
+
+    >>> str(
+    ...     UiCollection(UiSelector().className('container')).getChildByInstance(UiSelector(), 2)
+    ... )
+    'new UiCollection(new UiSelector().className("container")).getChildByInstance(new UiSelector(), 2)'
+    """
+
+    def __init__(self, uiselector_container=None):
+        _PythonUIAutomatorBuilderMixin.__init__(self)
+        self.uiselector_container = uiselector_container or UiSelector().className('android.support.v7.widget.RecyclerView')
+
+    def __str__(self):
+        return f'''new UiCollection({self.uiselector_container}){self._render_args()}'''
