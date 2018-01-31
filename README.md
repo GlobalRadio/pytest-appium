@@ -1,7 +1,7 @@
 pytest-appium
 =============
 
-`pytest-appium` is a plugin for [pytest](https://docs.pytest.org/en/latest/) that provides support for running Appium based tests.
+`pytest-appium` is a plugin for [pytest](https://docs.pytest.org/en/latest/) that provides support for running [Appium](http://appium.io/) based tests.
 
 It is inspired by [pytest-selenium](https://github.com/pytest-dev/pytest-selenium)
 
@@ -178,6 +178,6 @@ We can transparently overlay extra Mixin's over the base `driver` object.
 
 ```
 
-Omit the `name=''` to allow the mixin to augment all platforms.
+Omit the `name='platform'` argument to allow the mixin to augment all platforms.
 
 Note: `dir(appium_extended)` will *NOT* reveal your additional mixin methods. They are invisible. (This could be improved in a future version)
