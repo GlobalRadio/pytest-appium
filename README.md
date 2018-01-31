@@ -1,11 +1,17 @@
 pytest-appium
 =============
 
-`pytest-appium` is a plugin for pytest that provides support for running Appium based tests.
+`pytest-appium` is a plugin for [pytest](https://docs.pytest.org/en/latest/) that provides support for running Appium based tests.
 
 It is inspired by [pytest-selenium](https://github.com/pytest-dev/pytest-selenium)
 
-This package has a suite of additional utilities to augment the base Appium `driver` with additional modular functionality with python mixins
+This package has a suite of additional utilities
+
+* HTML Reports
+* Augment the base Appium `driver` with additional modular functionality with python mixins.
+* Wait for Appium to be ready
+* `pytest.mark.platform`
+* Light pythong builders for Android [UiSelector](https://developer.android.com/reference/android/support/test/uiautomator/UiSelector.html)
 
 
 Setup
