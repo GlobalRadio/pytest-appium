@@ -59,7 +59,7 @@ Features
 
 ### HTML reports
 
-[https://pypi.python.org/pypi/pytest-html/](pytest-html) for Appium tests.
+[pytest-html](https://pypi.python.org/pypi/pytest-html/) for Appium tests.
 
 Includes screenshot, page `XML` and full `logcat` dumps.
 
@@ -146,7 +146,7 @@ Handling long android strings to compose UiSelectors is inflexible. A lightweigh
 
 ### Appium Driver Extensions
 
-The base Appium [https://github.com/appium/python-client](python-client) `driver` supports base functions.
+The base Appium [python-client](https://github.com/appium/python-client) `driver` supports base functions.
 We sometimes want to add extra functionality to this `driver` for individual platforms.
 
 We can transparently overlay extra Mixin's over the base `driver` object.
