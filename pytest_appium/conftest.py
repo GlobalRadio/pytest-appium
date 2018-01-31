@@ -1,3 +1,4 @@
+import logging
 import copy
 from datetime import datetime
 import os
@@ -8,12 +9,15 @@ import datetime
 from functools import partial
 
 import pytest
-
-from ._utils import get_json, post_json
-
 from appium import webdriver
 
-import logging
+from ._utils import get_json, post_json
+from .driver.proxy.proxy_mixin import proxy
+from .driver.proxy import appium_extensions
+from .driver.proxy import android_extensions
+from .driver.proxy import ios_extensions
+
+
 log = logging.getLogger(__name__)
 
 
@@ -179,3 +183,31 @@ def driver_session(request, driver_session_):
 def appium(driver_session):
     """Alias for driver_session"""
     yield driver_session
+
+
+@pytest.fixture
+def appium_extended(appium):
+    appium = proxy(appium)  # Apply generic mixins over appium
+    appium = proxy(appium, appium.platform)  # Apply platform specific mixins
+    return appium
+
+
+def pytest_runtest_setup(item):
+    """
+    https://docs.pytest.org/en/latest/example/markers.html#custom-marker-and-command-line-option-to-control-test-runs
+
+    Process platform marker:
+        @pytest.mark.platform('android')
+        def test_example():
+            pass
+    """
+    platform_marker = item.get_marker("platform")
+    if platform_marker is None:
+        return
+    test_platform_specified = platform_marker.args[0].lower()
+    #try:
+    current_platform = item.config._variables['capabilities']['platformName'].lower()
+    #except KeyError:
+    #    return
+    if test_platform_specified != current_platform:
+        pytest.skip(f'test is only targeted for {test_platform_specified}')

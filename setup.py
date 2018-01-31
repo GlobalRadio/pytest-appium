@@ -10,21 +10,26 @@ setup(
     #py_modules=['pytest_appium'],
     packages=['pytest_appium'],
     long_description=open(path.join(_here, 'README.md')).read(),
-
-    #url='http://git.int.thisisglobal.com/interactive/pytest-appium',
-    #author='Global',
-    #author_email=' leicestersquare-interactive-developers@global.com',
-    #license='MIT',
+    install_requires=[
+        'pytest',
+        'pytest-html',
+        'Appium-Python-Client',
+        'wrapt',
+    ],
+    url='http://git.int.thisisglobal.com/interactive/pytest-appium',
+    author='Global',
+    author_email=' leicestersquare-interactive-developers@global.com',
+    license='MIT',
     #platform='any',
-    #classifiers=[
-    #    'Development Status :: 3 - Alpha',
-    #    'Programming Language :: Python',
-    #    'Programming Language :: Python :: 3',
-    #    'Programming Language :: Python :: 3.5',
-    #    'Intended Audience :: Developers',
-    #    'License :: OSI Approved :: MIT License',
-    #    'Topic :: Software Development :: Libraries',
-    #    'Topic :: Software Development :: Libraries :: Python Modules'
-    #],
-    #keywords='appium pytest'
+    classifiers=[
+        'Development Status :: 3 - Alpha',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.6',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: MIT License',
+        'Topic :: Software Development :: Libraries',
+        'Topic :: Software Development :: Libraries :: Python Modules'
+    ],
+    keywords='appium, pytest'
 )
