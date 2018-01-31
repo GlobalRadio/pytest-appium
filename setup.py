@@ -5,8 +5,8 @@ _here = path.dirname(path.abspath(__file__))
 
 setup(
     name='pytest-appium',
-    description='PyTest bindings for Appium',
-    version='0.0.1',
+    description='pytest plugin for appium',
+    version='0.0.2',
     #py_modules=['pytest_appium'],
     packages=['pytest_appium'],
     long_description=open(path.join(_here, 'README.md')).read(),
