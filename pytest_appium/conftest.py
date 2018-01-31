@@ -28,6 +28,9 @@ def _environment(request, session_capabilities):
     # add environment details to the pytest-html plugin
     #config._environment.append(('Driver', config.option.driver))
     # add capabilities to environment
+    if not hasattr(config, '_environment'):
+        log.warn('pytest.config has no _environment')
+        return
     config._environment.extend([('Capability', '{0}: {1}'.format(
         k, v)) for k, v in session_capabilities.items()])
     #if config.option.driver == 'Remote':
