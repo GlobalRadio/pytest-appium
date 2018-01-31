@@ -79,6 +79,9 @@ On startup we can wait for a varity of conditions.
                             available before raising an error.
 ```
 
+* `appium` - Waits for the Appium port to become active
+* `android_device_available` - Trys to send a low level `wd` api call to launch an Android packagename "NOT-REAL". We know an android device is connected and available if the error message explicitly contains "NOT-REAL".
+
 Example of use in a `docker-compose.yml` waiting for android device.
 ```yaml
     command:
