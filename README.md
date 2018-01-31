@@ -11,7 +11,7 @@ This package has a suite of additional utilities
 * Augment the base Appium `driver` with additional modular functionality with python mixins.
 * Wait for Appium to be ready
 * `pytest.mark.platform`
-* Light pythong builders for Android [UiSelector](https://developer.android.com/reference/android/support/test/uiautomator/UiSelector.html)
+* Light python builders for Android [UiSelector](https://developer.android.com/reference/android/support/test/uiautomator/UiSelector.html)
 
 
 Setup
@@ -148,7 +148,7 @@ We sometimes want to add extra functionality to this `driver` for individual pla
 
 We can transparently overlay extra Mixin's over the base `driver` object.
 
-```python3
+```python
     from pytest_appium.driver.proxy.proxy_mixin import register_proxy_mixin
 
     @register_proxy_mixin(name='android')
@@ -170,8 +170,8 @@ We can transparently overlay extra Mixin's over the base `driver` object.
 
     # The `appium` fixture can be used to get the base `driver` without mixin augmentation.
     @pytest.mark.xfail
-    def test_my_mixin(appium):
-        el = appium_extended.new_thing('text of awesome')
+    def test_my_mixin_without_extension(appium):
+        el = appium.new_thing('text of awesome')
 
 ```
 
