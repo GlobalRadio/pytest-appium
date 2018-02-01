@@ -20,6 +20,12 @@ class AndroidUIAutomator2Mixin():
             selector = str(selector)
         return self.__class__.find_element_by_android_uiautomator(self, selector)
 
+    def find_text_on_page(self, text):
+        return self.find_element_on_page(UiSelector().text(text))
+
+    def find_description_on_page(self, description):
+        return self.find_element_on_page(UiSelector().description(description))
+
 
 @register_proxy_mixin(name='android')
 class Gestures():
