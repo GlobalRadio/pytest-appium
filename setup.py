@@ -1,5 +1,7 @@
-from distutils.core import setup
+#from distutils.core import setup
 from os import path
+
+from setuptools import setup, find_packages
 
 _here = path.dirname(path.abspath(__file__))
 
@@ -8,7 +10,7 @@ setup(
     description='pytest plugin for appium',
     version='0.0.2',
     #py_modules=['pytest_appium'],
-    packages=['pytest_appium'],
+    packages=find_packages(),  # ['pytest_appium'],
     long_description=open(path.join(_here, 'README.md')).read(),
     install_requires=[
         'pytest',
@@ -18,7 +20,7 @@ setup(
     ],
     url='http://git.int.thisisglobal.com/interactive/pytest-appium',
     author='Global',
-    author_email=' leicestersquare-interactive-developers@global.com',
+    author_email='leicestersquare-interactive-developers@global.com',
     license='MIT',
     #platform='any',
     classifiers=[
