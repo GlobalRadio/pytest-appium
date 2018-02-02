@@ -144,12 +144,12 @@ Handling long android strings to compose UiSelectors is inflexible. A lightweigh
     self.driver.find_element_by_android_uiautomator(selector)
 ```
 
-### Appium Driver Extensions
+### Appium Driver Extension Framework
 
 The base Appium [python-client](https://github.com/appium/python-client) `driver` supports base functions.
 We sometimes want to add extra functionality to this `driver` for individual platforms.
 
-We can transparently overlay extra Mixin's over the base `driver` object.
+We can transparently overlay extra Mixin's over the base `driver` object. This is available as the pytest fixture `appium_extended`.
 
 ```python
     from pytest_appium.driver.proxy.proxy_mixin import register_proxy_mixin
@@ -172,7 +172,7 @@ We can transparently overlay extra Mixin's over the base `driver` object.
         el = appium_extended.new_thing('text of awesome')
 
     # The `appium` fixture can be used to get the base `driver` without mixin augmentation.
-    @pytest.mark.xfail
+    @pytest.mark.xfail(strict=True)
     def test_my_mixin_without_extension(appium):
         el = appium.new_thing('text of awesome')
 
@@ -181,3 +181,20 @@ We can transparently overlay extra Mixin's over the base `driver` object.
 Omit the `name='platform'` argument to allow the mixin to augment all platforms.
 
 Note: `dir(appium_extended)` will *NOT* reveal your additional mixin methods. They are invisible. (This could be improved in a future version)
+
+
+### `appium_extended` Driver Extensions Summary
+
+| platform | method | description |
+|----------|--------|-------------|
+| all | .platform | return a string of the platform name (android, ios) |
+| all | .wait_for() | wait for element to become visible |
+| all | .find_element_safe | same as find_element but returns None rather than throw exception |
+| all | .get_element_bounds | return dict of derived location information of element |
+| all | .swipe_element | swipe in a direction |
+| all | .find_element_on_page | swipe up/down left/right looking for an element. Similar to android UiScrollable but platform dependent |
+| android | .find_element_by_android_uiautomator | accepts UiSelector python objects |
+| android | .scroll_to_element_by_android_uiautomator | similar to find_element_on_page |
+| android | .back, .home, .app_switcher, .background_app | send android keycodes |
+| android | .wait_for_webview | wait for a webview to become active and populated |
+| ios | | in progress |
