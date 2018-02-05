@@ -53,10 +53,10 @@ class AndroidWebViewMixin():
 
     def wait_for_webview(self, *args, **kwargs):
         kwargs.setdefault('timeout', 20)
+        webview_selector = UiSelector().className('android.webkit.WebView')
+        assert self.find_element(*UiScrollable().scrollIntoView(webview_selector).build())
         assert self.wait_for(
-            UiSelector().className('android.webkit.WebView').childSelector(
-                UiSelector().className('android.view.View')
-            ).build(),
+            webview_selector.childSelector(UiSelector().className('android.view.View')).build(),
             *args,
             **kwargs,
         )
