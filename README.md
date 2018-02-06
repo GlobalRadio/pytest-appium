@@ -71,7 +71,7 @@ On startup we can wait for a varity of conditions.
 `pytest --help` for details
 
 ```
-    --appium_wait_for_contition={appium,android_device_available}
+    --appium_wait_for_condition={appium,android_device_available}
                             Type of appium condition to wait for before beginning
                             first test
     --appium_wait_for_seconds=APPIUM_WAIT_FOR_SECONDS
@@ -89,7 +89,7 @@ Example of use in a `docker-compose.yml` waiting for android device.
       ...
       - --appium_host=android-container
       - --appium_wait_for_seconds=90
-      - --appium_wait_for_contition=android_device_available
+      - --appium_wait_for_condition=android_device_available
       ...
 ```
 
@@ -103,7 +103,7 @@ Exampe of use in a `bash` script waiting for appium service to become active.
         tests \
         ...
         --appium_host=localhost \
-        --appium_wait_for_contition appium \
+        --appium_wait_for_condition appium \
         --appium_wait_for_seconds 30 \
         ...
 

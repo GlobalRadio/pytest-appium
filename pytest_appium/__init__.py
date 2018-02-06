@@ -2,6 +2,7 @@ import os
 
 from .conftest import *
 
+
 def pytest_configure(config):
     if hasattr(config, 'slaveinput'):
         return  # xdist slave
@@ -15,6 +16,18 @@ def pytest_configure(config):
         'markers', 'capabilities(kwargs): add or change existing '
         'capabilities. specify capabilities as keyword arguments, for example '
         'capabilities(foo=''bar'')')
+
+    # register an additional markers
+    config.addinivalue_line('markers', 'platform(name): mark test to run only on named mobile platform')
+
+    # Feature to sleep before a testsuite run
+    try:
+        if not config.option.appium_wait_for_condition and config.option.appium_wait_grace_for_seconds:
+            log.info('Sleeping for grace period before activation')
+            import time
+            time.sleep(config.option.appium_wait_grace_for_seconds)
+    except AttributeError:
+        pass
 
 
 def pytest_addhooks(pluginmanager):
@@ -41,8 +54,9 @@ def pytest_addoption(parser):
     group = parser.getgroup('appium', 'appium')
     group.addoption('--appium_host', metavar='str', default='localhost', help='')
     group.addoption('--appium_port', metavar='str', default='4723', help='')
-    group.addoption('--appium_wait_for_contition', choices=APPIUM_WAIT_FOR.keys(), help='Type of appium condition to wait for before begining first test')
+    group.addoption('--appium_wait_for_condition', choices=APPIUM_WAIT_FOR.keys(), help='Type of appium condition to wait for before begining first test')
     group.addoption('--appium_wait_for_seconds', type=int, default=0, help='Seconds to wait for an Appium server to become available before raising an error.')
+    group.addoption('--appium_wait_grace_for_seconds', type=int, default=0, help='Seconds to pause after the GO condition is satisfied.')
     group.addoption('--appium_debug_app_string_key', metavar='str', action='append', default=[], help='Strings to extract on failure for html report')
     group.addoption(
         '--capability',

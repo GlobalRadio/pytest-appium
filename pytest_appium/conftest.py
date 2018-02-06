@@ -114,6 +114,7 @@ appium_is_device_available_android = partial(
         "platformName": "Android",
         "deviceName": "Android Emulator",
         "appPackage": "NOT_REAL",
+        "clearSystemFiles": True,
     },
     appNameKey='appPackage',
 )
@@ -149,7 +150,7 @@ def driver_session_(request, session_capabilities):
 
     # Wait for Appium
     def wait_for_appium():
-        wait_for_condition = request.config.option.appium_wait_for_contition
+        wait_for_condition = request.config.option.appium_wait_for_condition
         seconds_to_wait = request.config.option.appium_wait_for_seconds
         if not seconds_to_wait or not wait_for_condition:
             return
@@ -158,11 +159,13 @@ def driver_session_(request, session_capabilities):
         while datetime.datetime.now() <= expire_datetime:
             try:
                 if APPIUM_WAIT_FOR[wait_for_condition](appium_url):
+                    log.debug('Android Device (apparently) ready: Waiting for further grace period')
+                    time.sleep(request.config.option.appium_wait_grace_for_seconds)
                     return
             except Exception:
                 pass
             log.debug(f'Waiting on {wait_for_condition} for {seconds_to_wait} for Appium server{appium_url}')
-            time.sleep(1)
+            time.sleep(2)
         raise Exception(f'Server not ready. Failed to wait on {wait_for_condition} for {seconds_to_wait} seconds for Appium server {appium_url}')
     wait_for_appium()
 

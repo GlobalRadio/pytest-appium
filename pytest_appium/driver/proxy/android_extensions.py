@@ -1,5 +1,6 @@
 import logging
 from time import sleep
+from contextlib import contextmanager
 
 from pytest_appium.android.UIAutomator2 import UiSelector, UiScrollable
 from pytest_appium.driver.proxy.proxy_mixin import register_proxy_mixin
@@ -51,12 +52,32 @@ class Gestures():
 @register_proxy_mixin(name='android')
 class AndroidWebViewMixin():
 
+    @property
+    def webview_selector(self):
+        return UiSelector().className('android.webkit.WebView')
+
+    @property
+    def webview_selector_child(self):
+        return self.webview_selector.childSelector(UiSelector().className('android.view.View'))
+
+    @property
+    def webview_element(self):
+        return self.find_element_on_page(self.webview_selector)
+
     def wait_for_webview(self, *args, **kwargs):
-        kwargs.setdefault('timeout', 20)
-        webview_selector = UiSelector().className('android.webkit.WebView')
-        assert self.find_element(*UiScrollable().scrollIntoView(webview_selector).build())
+        assert self.capabilities.get('automationName') == 'UiAutomator2', 'WebView wait is only supported with UiAutomator2 driver'
+        kwargs.setdefault('timeout', 30)
         assert self.wait_for(
-            webview_selector.childSelector(UiSelector().className('android.view.View')).build(),
+            self.webview_selector_child.build(),
             *args,
             **kwargs,
         )
+
+    @contextmanager
+    def webview_context(self, context_name='WEBVIEW'):
+        current_context_name = self.current_context
+        target_context_name = (context for context in self.contexts if context_name in context).__iter__().__next__()
+        assert target_context_name, 'Unable to find {context_name} in available contexts {self.contexts}'
+        self.switch_to.context(target_context_name)
+        yield None
+        self.switch_to.context(current_context_name)
