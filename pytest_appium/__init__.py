@@ -12,13 +12,14 @@ def pytest_configure(config):
             from .html_reporting import AppiumReportPlugin
             #from .pytest_appium import *
             config.pluginmanager.register(AppiumReportPlugin())
-    config.addinivalue_line(
-        'markers', 'capabilities(kwargs): add or change existing '
-        'capabilities. specify capabilities as keyword arguments, for example '
-        'capabilities(foo=''bar'')')
 
-    # register an additional markers
-    config.addinivalue_line('markers', 'platform(name): mark test to run only on named mobile platform')
+    config.addinivalue_line(
+        'markers',
+        'capabilities(kwargs): add or change existing '
+        'capabilities. specify capabilities as keyword arguments, for example '
+        'capabilities(foo=''bar'')'
+        'platform(name): mark test to run only on named mobile platform'
+    )
 
     # Feature to sleep before a testsuite run
     try:
