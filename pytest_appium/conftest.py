@@ -198,22 +198,24 @@ def appium_extended(appium):
     return appium
 
 
-def pytest_runtest_setup(item):
+def pytest_collection_modifyitems(config, items):
     """
     https://docs.pytest.org/en/latest/example/markers.html#custom-marker-and-command-line-option-to-control-test-runs
+    https://docs.pytest.org/en/latest/writing_plugins.html#_pytest.hookspec.pytest_collection_modifyitems
 
     Process platform marker:
         @pytest.mark.platform('android')
         def test_example():
             pass
     """
-    platform_marker = item.get_marker("platform")
-    if platform_marker is None:
-        return
-    test_platform_specified = platform_marker.args[0].lower()
-    #try:
-    current_platform = item.config._variables['capabilities']['platformName'].lower()
-    #except KeyError:
-    #    return
-    if test_platform_specified != current_platform:
-        pytest.skip(f'test is only targeted for {test_platform_specified}')
+
+    # Filter tests that are not targeted for this platform
+    current_platform = config._variables['capabilities']['platformName'].lower()
+    def select_test(item):
+        platform_marker = item.get_marker("platform")
+        if platform_marker and platform_marker.args and current_platform:
+            test_platform_specified = platform_marker.args[0].lower()
+            if test_platform_specified != current_platform:
+                return False
+        return True
+    items[:] = filter(select_test, items)
