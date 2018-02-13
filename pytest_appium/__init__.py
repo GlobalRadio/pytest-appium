@@ -18,6 +18,9 @@ def pytest_configure(config):
         'capabilities(kwargs): add or change existing '
         'capabilities. specify capabilities as keyword arguments, for example '
         'capabilities(foo=''bar'')'
+    )
+    config.addinivalue_line(
+        'markers',
         'platform(name): mark test to run only on named mobile platform'
     )
 
