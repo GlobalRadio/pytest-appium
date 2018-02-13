@@ -7,6 +7,7 @@ import urllib.error
 import time
 import datetime
 from functools import partial
+from itertools import filterfalse
 
 import pytest
 from appium import webdriver
@@ -218,4 +219,5 @@ def pytest_collection_modifyitems(config, items):
             if test_platform_specified != current_platform:
                 return False
         return True
+    config.hook.pytest_deselected(items=filterfalse(select_test, items))
     items[:] = filter(select_test, items)
