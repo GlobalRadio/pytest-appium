@@ -24,12 +24,13 @@ class PlatformShortcutMixin():
 
 @register_proxy_mixin
 class WebDriverWaitMixin():
-    def wait_for(self, *args, timeout=5, expected_condition='presence_of_element_located', **kwargs):
+    WAIT_FOR_DEFAULT_TIMEOUT_SECONDS = 5
+    def wait_for(self, *args, timeout=None, expected_condition='presence_of_element_located', **kwargs):
         """
         https://seleniumhq.github.io/selenium/docs/api/py/webdriver_support/selenium.webdriver.support.expected_conditions.html#module-selenium.webdriver.support.expected_conditions
         """
         try:
-            return WebDriverWait(self, timeout).until(getattr(EC, expected_condition)(*args, **kwargs))
+            return WebDriverWait(self, timeout or self.WAIT_FOR_DEFAULT_TIMEOUT_SECONDS).until(getattr(EC, expected_condition)(*args, **kwargs))
         except TimeoutException:
             return None
 
