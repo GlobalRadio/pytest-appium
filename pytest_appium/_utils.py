@@ -1,6 +1,7 @@
 import json
 import urllib  #.request
 import time
+import requests
 
 
 def _decode_response(response):
@@ -12,8 +13,9 @@ def _decode_response(response):
     return json.loads(data.decode(encoding))
 
 
-def get_json(url):
-    return _decode_response(urllib.request.urlopen(url))
+def get_json(url, headers: dict=None):
+    r = requests.get(url, headers=headers)
+    return r.json()
 
 
 def post_json(url, data):
