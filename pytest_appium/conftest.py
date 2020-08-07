@@ -213,7 +213,7 @@ def pytest_collection_modifyitems(config, items):
     # Filter tests that are not targeted for this platform
     current_platform = config._variables.get('capabilities',{}).get('platformName','').lower()
     def select_test(item):
-        platform_marker = item.get_marker("platform")
+        platform_marker = item.get_closest_marker("platform")
         if platform_marker and platform_marker.args and current_platform:
             test_platform_specified = platform_marker.args[0].lower()
             if test_platform_specified != current_platform:
