@@ -3,3 +3,5 @@
 **/__pycache__
 
 **/.vscode
+
+.pytest_appium.egg-info
