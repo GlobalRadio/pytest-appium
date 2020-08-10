@@ -138,16 +138,16 @@ APPIUM_WAIT_FOR = {
 }
 
 @pytest.yield_fixture(scope='session')
-def driver_session_(request, session_capabilities):
+def driver_session_(driver_class, driver_kwargs, request, session_capabilities):
     """
     Appium Session
     Created from --capabilities
     (do not use this fixture directly as report screenshots will not function)
     """
-    _driver_class = driver_class(request)
-    _driver_kwargs = driver_kwargs(request, session_capabilities)
+    driver_class(request)
+    driver_kwargs(request, session_capabilities)
 
-    appium_url = _driver_kwargs['command_executor']
+    appium_url = driver_kwargs['command_executor']
 
     # Wait for Appium
     def wait_for_appium():
@@ -171,7 +171,7 @@ def driver_session_(request, session_capabilities):
     wait_for_appium()
 
     try:
-        yield from driver(request, _driver_class, _driver_kwargs)
+        yield from driver(request, driver_class, driver_kwargs)
     except urllib.error.URLError:
         raise Exception(f"""Unable to connect to Appium server {appium_url}""")
 
