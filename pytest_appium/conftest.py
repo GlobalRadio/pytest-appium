@@ -71,7 +71,7 @@ def driver_class(request):
 def driver_class_fixture(request):
     return driver_class(request)
 
-@pytest.yield_fixture
+
 def driver(request, driver_class, driver_kwargs):
     """Returns a AppiumDriver instance based on options and capabilities"""
     driver = driver_class(**driver_kwargs)
