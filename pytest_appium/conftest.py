@@ -49,7 +49,6 @@ def session_capabilities(request, variables):
     return capabilities
 
 
-@pytest.fixture
 def driver_kwargs(request, capabilities):
     """ """
     # Assertions of capabilitys should go here
@@ -64,11 +63,13 @@ def driver_kwargs(request, capabilities):
     return kwargs
 
 
-@pytest.fixture
 def driver_class(request):
     """Appium driver class"""
     return webdriver.Remote
 
+@pytest.fixture
+def driver_class_fixture(request):
+    return driver_class(request)
 
 @pytest.yield_fixture
 def driver(request, driver_class, driver_kwargs):
@@ -213,7 +214,7 @@ def pytest_collection_modifyitems(config, items):
     # Filter tests that are not targeted for this platform
     current_platform = config._variables.get('capabilities',{}).get('platformName','').lower()
     def select_test(item):
-        platform_marker = item.get_marker("platform")
+        platform_marker = item.get_closest_marker("platform")
         if platform_marker and platform_marker.args and current_platform:
             test_platform_specified = platform_marker.args[0].lower()
             if test_platform_specified != current_platform:
