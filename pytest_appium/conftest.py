@@ -138,7 +138,7 @@ APPIUM_WAIT_FOR = {
     #'ios_device_available': appium_is_device_available_ios,
 }
 
-@pytest.yield_fixture(scope='session')
+@pytest.fixture(scope='session')
 def driver_session_(request, session_capabilities):
     """
     Appium Session
@@ -177,7 +177,7 @@ def driver_session_(request, session_capabilities):
         raise Exception(f"""Unable to connect to Appium server {appium_url}""")
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def driver_session(request, driver_session_):
     """
     Appium Session
@@ -187,7 +187,7 @@ def driver_session(request, driver_session_):
     #driver_session_.reset()
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def appium(driver_session):
     """Alias for driver_session"""
     yield driver_session
