@@ -49,7 +49,6 @@ def session_capabilities(request, variables):
     return capabilities
 
 
-@pytest.fixture
 def driver_kwargs(request, capabilities):
     """ """
     # Assertions of capabilitys should go here
@@ -64,13 +63,15 @@ def driver_kwargs(request, capabilities):
     return kwargs
 
 
-@pytest.fixture
 def driver_class(request):
     """Appium driver class"""
     return webdriver.Remote
 
+@pytest.fixture
+def driver_class_fixture(request):
+    return driver_class(request)
 
-@pytest.yield_fixture
+
 def driver(request, driver_class, driver_kwargs):
     """Returns a AppiumDriver instance based on options and capabilities"""
     driver = driver_class(**driver_kwargs)
@@ -137,7 +138,7 @@ APPIUM_WAIT_FOR = {
     #'ios_device_available': appium_is_device_available_ios,
 }
 
-@pytest.yield_fixture(scope='session')
+@pytest.fixture(scope='session')
 def driver_session_(request, session_capabilities):
     """
     Appium Session
@@ -176,7 +177,7 @@ def driver_session_(request, session_capabilities):
         raise Exception(f"""Unable to connect to Appium server {appium_url}""")
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def driver_session(request, driver_session_):
     """
     Appium Session
@@ -186,7 +187,7 @@ def driver_session(request, driver_session_):
     #driver_session_.reset()
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def appium(driver_session):
     """Alias for driver_session"""
     yield driver_session
@@ -213,7 +214,7 @@ def pytest_collection_modifyitems(config, items):
     # Filter tests that are not targeted for this platform
     current_platform = config._variables.get('capabilities',{}).get('platformName','').lower()
     def select_test(item):
-        platform_marker = item.get_marker("platform")
+        platform_marker = item.get_closest_marker("platform")
         if platform_marker and platform_marker.args and current_platform:
             test_platform_specified = platform_marker.args[0].lower()
             if test_platform_specified != current_platform:
