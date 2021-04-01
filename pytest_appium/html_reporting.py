@@ -120,7 +120,9 @@ class AppiumReportPlugin(object):
                 if 'page_source' not in exclude:
                     _gather_page_source(item, report, driver, summary, extra)
                 if 'logs' not in exclude:
-                    _gather_logs(item, report, driver, summary, extra)
+                    pass  # log gathering on Android is very time-consuming,
+                    # and seems to fail on Jenkins anyway
+                    # _gather_logs(item, report, driver, summary, extra)
                 item.config.hook.pytest_appium_capture_debug(item=item, report=report, extra=extra)
             item.config.hook.pytest_appium_runtest_makereport(item=item, report=report, summary=summary, extra=extra)
         if summary:
