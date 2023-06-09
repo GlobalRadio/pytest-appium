@@ -55,7 +55,7 @@ def driver_kwargs(request, capabilities):
     #appium_user = f'{0.appium_username}:{0.appium_access_key}@'
     kwargs = dict(
         command_executor='http://{0.appium_host}:{0.appium_port}/wd/hub'.format(request.config.option),
-        capabilities=capabilities,
+        desired_capabilities=capabilities,
         browser_profile=None,
         proxy=None,
         keep_alive=False,
