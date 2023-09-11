@@ -2,9 +2,9 @@ import copy
 from functools import reduce
 
 try:
-    from appium.webdriver.common.mobileby import MobileBy
+    from appium.webdriver.common.appiumby import AppiumBy
 except ImportError:
-    class MobileBy():
+    class AppiumBy():
         ANDROID_UIAUTOMATOR = '-android uiautomator'
 
 """
@@ -104,7 +104,7 @@ class _PythonUIAutomatorBuilderMixin():
             return _add_segment
 
     def build(self):
-        return (MobileBy.ANDROID_UIAUTOMATOR, self.__str__())
+        return (AppiumBy.ANDROID_UIAUTOMATOR, self.__str__())
 
 
 class UiSelector(_PythonUIAutomatorBuilderMixin):
