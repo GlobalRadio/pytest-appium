@@ -1,7 +1,7 @@
 import logging
 from contextlib import contextmanager
 
-from appium.webdriver.common.appiumby import AppiumBy as By
+from appium.webdriver.common.mobileby import MobileBy as By
 
 from pytest_appium._utils import wait_for
 from pytest_appium.driver.proxy.proxy_mixin import register_proxy_mixin
