@@ -54,7 +54,7 @@ def driver_kwargs(request, capabilities):
     # Assertions of capabilitys should go here
     #appium_user = f'{0.appium_username}:{0.appium_access_key}@'
     kwargs = dict(
-        command_executor='http://{0.appium_host}:{0.appium_port}/wd/hub'.format(request.config.option),
+        command_executor='http://{0.appium_host}:{0.appium_port}'.format(request.config.option),
         desired_capabilities=capabilities,
         browser_profile=None,
         proxy=None,
