@@ -32,6 +32,17 @@ def _gather_screenshot(item, report, driver, summary, extra):
         # add screenshot to the html report
         extra.append(pytest_html.extras.image(screenshot, 'Screenshot'))
 
+def _gather_video(item, report, driver, summary, extra):
+    try:
+        video = driver.stop_recording_screen()
+    except Exception as e:
+        summary.append('WARNING: Failed to gather video: {0}'.format(e))
+        return
+    pytest_html = item.config.pluginmanager.getplugin('html')
+    if pytest_html is not None:
+        # add screenshot to the html report
+        extra.append(pytest_html.extras.mp4(video, 'Video'))
+
 
 def _gather_page_source(item, report, driver, summary, extra):
     try:
@@ -117,6 +128,8 @@ class AppiumReportPlugin(object):
                     _gather_app_strings(item, report, driver, summary, extra)
                 if 'screenshot' not in exclude:
                     _gather_screenshot(item, report, driver, summary, extra)
+                if 'video' not in exclude:
+                    _gather_video(item, report, driver, summary, extra)
                 if 'page_source' not in exclude:
                     _gather_page_source(item, report, driver, summary, extra)
                 if 'logs' not in exclude:
