@@ -11,6 +11,7 @@ from itertools import filterfalse
 
 import pytest
 from appium import webdriver
+from appium.options.common.base import AppiumOptions
 
 from ._utils import get_json, post_json
 from .driver.proxy.proxy_mixin import proxy
@@ -26,18 +27,27 @@ log = logging.getLogger(__name__)
 def _environment(request, session_capabilities):
     """Provide additional environment details to pytest-html report"""
     config = request.config
-    # add environment details to the pytest-html plugin
-    #config._environment.append(('Driver', config.option.driver))
-    # add capabilities to environment
+    capabilities_list = [(f'Capability: {k}', v) for k, v in session_capabilities.items()]
+
+    # Pytest 9 / Pytest-HTML 4.0 (Stash)
+    try:
+        from pytest_metadata.plugin import metadata_key
+        if metadata_key in config.stash:
+            metadata = config.stash[metadata_key]
+            for k, v in capabilities_list:
+                metadata[k] = v
+            metadata['Server'] = f"http://{config.option.appium_host}:{config.option.appium_port}"
+            return  # Finish here if stash exists
+    except (ImportError, ModuleNotFoundError):
+        pass
+
+    # Legacy Fallback (Pytest < 9)
     if not hasattr(config, '_environment'):
-        log.warn('pytest.config has no _environment')
+        log.warning('pytest.config has no _environment')
         return
-    config._environment.extend([('Capability', '{0}: {1}'.format(
-        k, v)) for k, v in session_capabilities.items()])
-    #if config.option.driver == 'Remote':
-    config._environment.append(
-        ('Server', 'http://{0.appium_host}:{0.appium_port}'.format(config.option))
-    )
+    
+    config._environment.extend(capabilities_list)
+    config._environment.append(('Server', f'http://{config.option.appium_host}:{config.option.appium_port}'))
 
 
 @pytest.fixture(scope='session')
@@ -49,28 +59,44 @@ def session_capabilities(request, variables):
     return capabilities
 
 
-@pytest.fixture
+def _pre_process_capabilities(capabilities):
+    """
+    Ensure all non-standard W3C capabilities are prefixed with appium:
+    """
+    standard_w3c_caps = [
+        'browserName', 'browserVersion', 'platformName', 'acceptInsecureCerts',
+        'pageLoadStrategy', 'proxy', 'setWindowRect', 'timeouts', 'unhandledPromptBehavior'
+    ]
+    processed_caps = {}
+    for k, v in capabilities.items():
+        if ':' not in k and k not in standard_w3c_caps:
+            processed_caps[f'appium:{k}'] = v
+        else:
+            processed_caps[k] = v
+    return processed_caps
+
+
 def driver_kwargs(request, capabilities):
     """ """
     # Assertions of capabilitys should go here
     #appium_user = f'{0.appium_username}:{0.appium_access_key}@'
+    options = AppiumOptions().load_capabilities(_pre_process_capabilities(capabilities))
     kwargs = dict(
-        command_executor='http://{0.appium_host}:{0.appium_port}/wd/hub'.format(request.config.option),
-        desired_capabilities=capabilities,
-        browser_profile=None,
-        proxy=None,
-        keep_alive=False,
+        command_executor='http://{0.appium_host}:{0.appium_port}'.format(request.config.option),
+        options=options
     )
     return kwargs
 
 
-@pytest.fixture
 def driver_class(request):
     """Appium driver class"""
     return webdriver.Remote
 
+@pytest.fixture
+def driver_class_fixture(request):
+    return driver_class(request)
 
-@pytest.yield_fixture
+
 def driver(request, driver_class, driver_kwargs):
     """Returns a AppiumDriver instance based on options and capabilities"""
     driver = driver_class(**driver_kwargs)
@@ -105,7 +131,7 @@ def _appium_is_device_available(appium_wd_api_endpoint, desiredCapabilities={}, 
     """
     response = post_json(
         url=f'''{appium_wd_api_endpoint}/session''',
-        data={"desiredCapabilities": desiredCapabilities},
+        data={"capabilities": {"alwaysMatch": _pre_process_capabilities(desiredCapabilities)}},
     )
     return desiredCapabilities[appNameKey] in response.get('value', {}).get('message', '')
 
@@ -137,7 +163,7 @@ APPIUM_WAIT_FOR = {
     #'ios_device_available': appium_is_device_available_ios,
 }
 
-@pytest.yield_fixture(scope='session')
+@pytest.fixture(scope='session')
 def driver_session_(request, session_capabilities):
     """
     Appium Session
@@ -176,7 +202,7 @@ def driver_session_(request, session_capabilities):
         raise Exception(f"""Unable to connect to Appium server {appium_url}""")
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def driver_session(request, driver_session_):
     """
     Appium Session
@@ -186,7 +212,7 @@ def driver_session(request, driver_session_):
     #driver_session_.reset()
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def appium(driver_session):
     """Alias for driver_session"""
     yield driver_session
@@ -211,13 +237,27 @@ def pytest_collection_modifyitems(config, items):
     """
 
     # Filter tests that are not targeted for this platform
-    current_platform = config._variables.get('capabilities',{}).get('platformName','').lower()
+    variables = getattr(config, '_variables', {})
+
+    # If not in legacy _variables, try to discover it in the new config.stash (Pytest 7+)
+    if not variables:
+        for key in getattr(config.stash, '_storage', {}).keys():
+            val = config.stash.get(key, None)
+            if isinstance(val, dict) and ('capabilities' in val or 'platformName' in val):
+                variables = val
+                break
+
+    capabilities = variables.get('capabilities', variables)
+    current_platform = str(capabilities.get('platformName', '')).lower()
+
     def select_test(item):
-        platform_marker = item.get_marker("platform")
+        platform_marker = item.get_closest_marker("platform")
         if platform_marker and platform_marker.args and current_platform:
-            test_platform_specified = platform_marker.args[0].lower()
+            test_platform_specified = str(platform_marker.args[0]).lower()
             if test_platform_specified != current_platform:
                 return False
         return True
+
+    from itertools import filterfalse
     config.hook.pytest_deselected(items=filterfalse(select_test, items))
     items[:] = filter(select_test, items)

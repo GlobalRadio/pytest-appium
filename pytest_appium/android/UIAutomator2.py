@@ -2,10 +2,13 @@ import copy
 from functools import reduce
 
 try:
-    from appium.webdriver.common.mobileby import MobileBy
+    from appium.webdriver.common.appiumby import AppiumBy as MobileBy
 except ImportError:
-    class MobileBy():
-        ANDROID_UIAUTOMATOR = '-android uiautomator'
+    try:
+        from appium.webdriver.common.mobileby import MobileBy
+    except ImportError:
+        class MobileBy():
+            ANDROID_UIAUTOMATOR = '-android uiautomator'
 
 """
 https://bitbar.com/how-to-get-started-with-ui-automator-2-0/

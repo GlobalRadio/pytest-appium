@@ -52,7 +52,7 @@ def pytest_addoption(parser):
     parser.addini(
         'appium_exclude_debug',
         help='debug to exclude from capture',
-        default=os.getenv('APPIUM_EXCLUDE_DEBUG'),
+        default=os.getenv('APPIUM_EXCLUDE_DEBUG') or '',
     )
 
     group = parser.getgroup('appium', 'appium')
@@ -78,7 +78,7 @@ def pytest_addoption(parser):
     )
 
 
-def pytest_report_header(config, startdir):
+def pytest_report_header(config):
     """return a string to be displayed as header info for terminal reporting."""
     capabilities = config.getoption('capabilities')
     if capabilities:

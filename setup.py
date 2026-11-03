@@ -8,7 +8,7 @@ _here = path.dirname(path.abspath(__file__))
 setup(
     name='pytest-appium',
     description='Plugin for running Appium with pytest',
-    version='0.0.2',
+    version='1.0.0',
     packages=find_packages(),
     long_description=open(path.join(_here, 'README.md')).read(),
     install_requires=[
