@@ -1,4 +1,0 @@
-pytest
-pytest-html
-Appium-Python-Client
-wrapt
